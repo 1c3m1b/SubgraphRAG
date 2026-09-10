@@ -1,0 +1,95 @@
+{
+  "dataset": "cwq",
+  "split": "test",
+  "retrieval_result": "reason/scored_triples/cwq_240907_unidir_test.pth",
+  "data": {
+    "gpt_triples_file": "retrieve/data_files/cwq/gpt_triples.pth",
+    "logical_form_files": [
+      "${CHATKBQA_ROOT}/data/CWQ/origin/ComplexWebQuestions_test.json"
+    ],
+    "rog_prediction_file": "reason/results/KGQA/cwq/RoG/test/results_gen_rule_path_RoG-cwq_RoG_test_predictions_3_False_jsonl/predictions.jsonl",
+    "dataset_sources": [
+      {
+        "name": "retrieval_and_reasoning_source",
+        "repo_id": "rmanluo/RoG-cwq",
+        "revision": "b0f6275586286312c4e99ef4b0adc65463c91f8e",
+        "split": "test",
+        "validate_retrieval_membership": true,
+        "validate_entity_metadata": true,
+        "require_all_retrieval_ids": true
+      }
+    ],
+    "reasoning_dataset": {
+      "repo_id": "rmanluo/RoG-cwq",
+      "revision": "b0f6275586286312c4e99ef4b0adc65463c91f8e"
+    },
+    "allow_retrieval_only_samples": false
+  },
+  "retriever": {
+    "text_encoder": "Alibaba-NLP/gte-large-en-v1.5",
+    "topic_positional_encoding": true,
+    "forward_rounds": 2,
+    "reverse_rounds": 2,
+    "training_seed": 42,
+    "score_space": "sigmoid_probability",
+    "stored_pool_budget": 500
+  },
+  "protocol": {
+    "cohort": "ordered keys of retrieval_result",
+    "candidate_graph": "rmanluo/RoG-cwq per-question KG pinned by dataset revision",
+    "prompt_mode": "scored_100",
+    "prompt_top_k": 100,
+    "threshold": 0.0,
+    "unparseable_policy": "baseline order",
+    "oracle_scope": "rerank stored candidate triples only"
+  },
+  "llm": {
+    "model_name": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    "resolved_revision": "RECORD_THE_REMOTE_HF_SNAPSHOT_COMMIT_OR_USE_A_LOCAL_SNAPSHOT_PATH",
+    "llm_mode": "sys_icl_dc_repro",
+    "tensor_parallel_size": 1,
+    "max_seq_len_to_capture": 16384,
+    "max_tokens": 4000,
+    "seed": 0,
+    "temperature": 0.0,
+    "frequency_penalty": 0.16
+  },
+  "evaluator": {
+    "hit": "reason/metrics/evaluate_results.py",
+    "hit_at_1_and_f1": "reason/metrics/evaluate_results_corrected.py",
+    "subsets": ["full", "answer_in_candidate_graph"],
+    "score_h": "disabled_for_variants_due_to_upstream_hard_coded_retrieval_path"
+  },
+  "phase0": {
+    "minimum_raw_output_agreement": 0.99,
+    "minimum_parsed_answer_agreement": 1.0
+  },
+  "phase2": {
+    "budgets": [50, 100, 200, 500],
+    "diagnostics_top_k": 100,
+    "match_state_limit": 100000
+  },
+  "expected_baseline": {
+    "source": "https://arxiv.org/html/2410.20724#S4",
+    "retrieval": {
+      "source": "paper Table 1, Top-100",
+      "shortest_path_triple_recall": {"value": 0.811, "tolerance": 0.005},
+      "gpt_triple_recall": {"value": 0.840, "tolerance": 0.005},
+      "answer_entity_recall": {"value": 0.914, "tolerance": 0.005}
+    },
+    "qa": {
+      "full": {
+        "source": "paper Table 3, SubgraphRAG + Llama3.1-8B, Top-100",
+        "macro_f1": {"value": 47.16, "tolerance": 0.5},
+        "hit": {"value": 56.98, "tolerance": 0.5}
+      },
+      "answer_in_graph_subset": {
+        "source": "paper Table 4, CWQ-sub",
+        "macro_f1": {"value": 54.76, "tolerance": 0.5},
+        "micro_f1": {"value": 0.5176, "tolerance": 0.005},
+        "hit": {"value": 65.80, "tolerance": 0.5},
+        "hit_at_1": {"value": 59.69, "tolerance": 0.5}
+      }
+    }
+  }
+}
